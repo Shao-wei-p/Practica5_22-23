@@ -25,13 +25,13 @@ public class EDLinkedHashSet<T> implements Set<T> {
     Node<T> last = null;
 
     public EDLinkedHashSet() {
-        table = new Node[DEFAULT_CAPACITY];
+        table = new EDLinkedHashSet.Node[DEFAULT_CAPACITY];
         used = new boolean[DEFAULT_CAPACITY];
         rehashThreshold = DEFAULT_THRESHOLD;
     }
 
     public EDLinkedHashSet(Collection<T> col) {
-        table = new Node[DEFAULT_CAPACITY];
+        table = new EDLinkedHashSet.Node[DEFAULT_CAPACITY];
         used = new boolean[DEFAULT_CAPACITY];
         rehashThreshold = DEFAULT_THRESHOLD;
 
@@ -74,7 +74,14 @@ public class EDLinkedHashSet<T> implements Set<T> {
      */
     @Override
     public boolean contains(Object item) {
-       
+        int indice= hash((T)item);
+        while (used[indice]){
+            if(table[indice].data.equals(item))
+                return true;
+            else
+                indice=(indice+1)%table.length;
+        }
+       return false;
     }
 
 	/**
@@ -84,7 +91,39 @@ public class EDLinkedHashSet<T> implements Set<T> {
      */
     @Override
     public boolean add(T item) {
-        
+        int indice=hash(item);
+        boolean found=false;
+        int free=-1;
+        while (used[indice]&& !found){
+            if(table[indice]!=null && table[indice].data.equals(item))
+                found=true;
+            else {
+                if(table[indice]==null && free==-1)
+                    free=indice;
+                indice=(indice+1)%table.length;
+            }
+        }
+        if (!found){
+            if (free==-1){
+                table[indice].data=item;
+                used[indice]=true;
+                dirty++;
+                last.next=table[indice];
+                table[indice].prev=last;
+                last=table[indice];
+            }
+            else {
+                table[free].data=item;
+                last.next=table[free];
+                table[free].prev=last;
+                last=table[free];
+            }
+            size++;
+            rehash();
+            return true;
+        }
+        else
+            return false;
     }
 
 	/**
@@ -94,7 +133,7 @@ public class EDLinkedHashSet<T> implements Set<T> {
      */
     @Override
     public boolean remove(Object item) {
-        
+        return false;
     }
 
 	/**
@@ -104,7 +143,7 @@ public class EDLinkedHashSet<T> implements Set<T> {
      */
 	@Override
     public boolean retainAll(Collection<?> c) {
-        
+        return false;
     }
 
     @Override
